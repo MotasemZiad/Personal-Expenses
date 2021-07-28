@@ -20,7 +20,6 @@ class Chart extends StatelessWidget {
           totalSum += recentTransactions[i].amount;
         }
       }
-      print(totalSum);
       return {
         'day': DateFormat.E().format(weekDay).substring(0, 1),
         'amount': totalSum.roundToDouble(),
@@ -40,7 +39,7 @@ class Chart extends StatelessWidget {
       margin: EdgeInsets.symmetric(
           horizontal: kMarginHorizontal, vertical: kMarginVertical),
       child: Padding(
-        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+        padding: const EdgeInsets.only(top: 8.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: groupedTransactionValues

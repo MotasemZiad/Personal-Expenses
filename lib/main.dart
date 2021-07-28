@@ -1,4 +1,6 @@
+import 'dart:io' show Platform;
 import 'dart:math';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import './widgets/chart.dart';
@@ -8,6 +10,12 @@ import './utils/constants.dart';
 import './widgets/new_transaction.dart';
 
 void main() {
+  // WidgetsFlutterBinding.ensureInitialized();
+  // ! to prevent the landscape mode in your app
+  // SystemChrome.setPreferredOrientations([
+  //   DeviceOrientation.portraitUp,
+  //   DeviceOrientation.portraitDown,
+  // ]);
   runApp(MyApp());
 }
 
@@ -50,11 +58,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var idRandom = Random().nextInt(1000000);
+  bool _showChart = false;
+  var _idRandom = Random().nextInt(1000000);
 
   void _addNewTransaction(String title, double amount, DateTime dateTime) {
     final transaction = Transaction(
-      id: idRandom.toString() + DateTime.now().toString(),
+      id: _idRandom.toString() + DateTime.now().toString(),
       title: title,
       amount: amount,
       date: dateTime,
@@ -89,38 +98,104 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Personal Expenses'),
-        actions: [
-          IconButton(
-              icon: Icon(Icons.add),
-              onPressed: () {
-                print('move to transaction ModalBottomSheet!');
-                _startAddNewTransaction(context);
-              }),
-        ],
-      ),
-      body: SingleChildScrollView(
+    final mediaQuery = MediaQuery.of(context);
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
+    final PreferredSizeWidget appBar = Platform.isIOS
+        ? CupertinoNavigationBar(
+            middle: Text('Personal Expenses'),
+            trailing: GestureDetector(
+              onTap: () => _startAddNewTransaction(context),
+              child: Icon(CupertinoIcons.add),
+            ),
+          )
+        : AppBar(
+            title: Text('Personal Expenses'),
+            actions: [
+              IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: () {
+                    print('move to transaction ModalBottomSheet!');
+                    _startAddNewTransaction(context);
+                  }),
+            ],
+          );
+    final transactionListWidget = Container(
+        height: (mediaQuery.size.height -
+                appBar.preferredSize.height -
+                mediaQuery.padding.top) *
+            0.7,
+        margin: EdgeInsets.symmetric(horizontal: 8.0),
+        child: TransactionList(deleteTransaction: _deleteTransaction));
+    final chartWidgetPortrait = Container(
+        height: (mediaQuery.size.height -
+                appBar.preferredSize.height -
+                mediaQuery.padding.top) *
+            0.3,
+        child: Chart(recentTransactions: recentTransactions));
+    final chartWidgetLandscape = Container(
+        height: (mediaQuery.size.height -
+                appBar.preferredSize.height -
+                mediaQuery.padding.top) *
+            0.7,
+        child: Chart(recentTransactions: recentTransactions));
+
+    final pageBody = SafeArea(
+      child: SingleChildScrollView(
         child: Column(
           children: [
-            Chart(recentTransactions: recentTransactions),
-            TransactionList(
-              deleteTransaction: _deleteTransaction,
-            ),
+            if (isLandscape)
+              SwitchListTile.adaptive(
+                value: _showChart,
+                onChanged: (value) {
+                  setState(() {
+                    _showChart = value;
+                  });
+                },
+                title: Text(
+                  'Show Chart',
+                  style: Theme.of(context).textTheme.headline6,
+                ),
+                subtitle: Text('To view all the transactions this week'),
+                activeColor: kColorPrimary,
+              ),
+            isLandscape
+                ? _showChart
+                    ? chartWidgetLandscape
+                    : transactionListWidget
+                : SafeArea(
+                    child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        chartWidgetPortrait,
+                        transactionListWidget,
+                      ],
+                    ),
+                  ))
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          print('move to transaction ModalBottomSheet!');
-          _startAddNewTransaction(context);
-        },
-        tooltip: 'Add new Expense',
-        child: Icon(Icons.add),
-      ),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.miniCenterFloat,
     );
+
+    return Platform.isIOS
+        ? CupertinoPageScaffold(
+            child: pageBody,
+            navigationBar: appBar,
+          )
+        : Scaffold(
+            appBar: appBar,
+            body: pageBody,
+            floatingActionButton: Platform.isIOS
+                ? Container()
+                : FloatingActionButton(
+                    onPressed: () {
+                      print('move to transaction ModalBottomSheet!');
+                      _startAddNewTransaction(context);
+                    },
+                    tooltip: 'Add new Expense',
+                    child: Icon(Icons.add),
+                  ),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.miniCenterFloat,
+          );
   }
 }

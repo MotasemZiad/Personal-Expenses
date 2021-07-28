@@ -1,4 +1,6 @@
 import 'package:expenses_planner/utils/constants.dart';
+import 'package:expenses_planner/widgets/adaptive_button.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -80,10 +82,7 @@ class _NewTransactionState extends State<NewTransaction> {
     return Container(
       color: Color(0xFF757575),
       child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: 12.0,
-          vertical: 12.0,
-        ),
+        padding: EdgeInsets.all(12.0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
@@ -128,31 +127,25 @@ class _NewTransactionState extends State<NewTransaction> {
                             : 'Picked Date: ${DateFormat.yMMMd().format(_selectedDate)}',
                       ),
                     ),
-                    TextButton(
+                    AdaptiveButton(
                       onPressed: _presentDatePicker,
-                      child: Text('Choose Date',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                          )),
+                      label: 'Choose Date',
+                      fontWeight: FontWeight.bold,
+                      isTextButton: true,
                     ),
                   ],
                 ),
                 SizedBox(
                   height: 12.0,
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    _submitData(context);
-                  },
-                  child: Text('Add Transaction',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16.0,
-                      )),
-                  style: TextButton.styleFrom(
-                    primary: Theme.of(context).textTheme.button.color,
-                  ),
-                ),
+                AdaptiveButton(
+                  onPressed: () => _submitData(context),
+                  label: 'Add Transaction',
+                  backgroundColor: kColorPrimary,
+                  buttonStyle: ElevatedButton.styleFrom(
+                      onPrimary: Theme.of(context).textTheme.button.color),
+                  fontSize: 16.0,
+                )
               ],
             ),
           ],
