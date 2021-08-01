@@ -10,7 +10,10 @@ class NewTransaction extends StatefulWidget {
   NewTransaction({this.addNewTransaction});
 
   @override
-  _NewTransactionState createState() => _NewTransactionState();
+  _NewTransactionState createState() {
+    print('createState method has implemented');
+    return _NewTransactionState();
+  }
 }
 
 class _NewTransactionState extends State<NewTransaction> {
@@ -73,8 +76,28 @@ class _NewTransactionState extends State<NewTransaction> {
     ).then((value) {
       if (value == null) return;
       _selectedDate = value;
-      setState(() {});
+      setState(() {
+        print('setState method has implemented');
+      });
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    print('initState method has implemented');
+  }
+
+  @override
+  void didUpdateWidget(NewTransaction oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    print('didUpdateWidget method has implemented');
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    print('dispose method has implemented');
   }
 
   @override
@@ -99,7 +122,7 @@ class _NewTransactionState extends State<NewTransaction> {
                   controller: _titleController,
                   cursorHeight: kCursorHeight,
                   keyboardType: TextInputType.name,
-                  onSubmitted: (_) {
+                  onEditingComplete: () {
                     _submitData(context);
                   },
                   decoration: InputDecoration(
@@ -110,7 +133,7 @@ class _NewTransactionState extends State<NewTransaction> {
                   controller: _amountController,
                   cursorHeight: kCursorHeight,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  onSubmitted: (_) {
+                  onEditingComplete: () {
                     _submitData(context);
                   },
                   decoration: InputDecoration(

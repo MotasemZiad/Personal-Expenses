@@ -57,7 +57,7 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   bool _showChart = false;
   var _idRandom = Random().nextInt(1000000);
 
@@ -71,6 +71,24 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       transactions.add(transaction);
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    print(state);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
   }
 
   void _startAddNewTransaction(BuildContext context) {
@@ -96,6 +114,58 @@ class _MyHomePageState extends State<MyHomePage> {
     }).toList();
   }
 
+  List<Widget> _buildLandscapeContent(
+      MediaQueryData mediaQuery, AppBar appBar) {
+    return [
+      SwitchListTile.adaptive(
+        value: _showChart,
+        onChanged: (value) {
+          setState(() {
+            _showChart = value;
+          });
+        },
+        title: Text(
+          'Show Chart',
+          style: Theme.of(context).textTheme.headline6,
+        ),
+        subtitle: Text('To view all the transactions this week'),
+        activeColor: kColorPrimary,
+      ),
+      _showChart
+          ? Container(
+              height: (mediaQuery.size.height -
+                      appBar.preferredSize.height -
+                      mediaQuery.padding.top) *
+                  0.7,
+              child: Chart(recentTransactions: recentTransactions))
+          : Container(
+              height: (mediaQuery.size.height -
+                      appBar.preferredSize.height -
+                      mediaQuery.padding.top) *
+                  0.7,
+              margin: EdgeInsets.symmetric(horizontal: 8.0),
+              child: TransactionList(deleteTransaction: _deleteTransaction))
+    ];
+  }
+
+  List<Widget> _buildPortraitContent(MediaQueryData mediaQuery, AppBar appBar) {
+    return [
+      Container(
+          height: (mediaQuery.size.height -
+                  appBar.preferredSize.height -
+                  mediaQuery.padding.top) *
+              0.3,
+          child: Chart(recentTransactions: recentTransactions)),
+      Container(
+          height: (mediaQuery.size.height -
+                  appBar.preferredSize.height -
+                  mediaQuery.padding.top) *
+              0.7,
+          margin: EdgeInsets.symmetric(horizontal: 8.0),
+          child: TransactionList(deleteTransaction: _deleteTransaction)),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -106,6 +176,7 @@ class _MyHomePageState extends State<MyHomePage> {
             trailing: GestureDetector(
               onTap: () => _startAddNewTransaction(context),
               child: Icon(CupertinoIcons.add),
+              behavior: HitTestBehavior.opaque,
             ),
           )
         : AppBar(
@@ -119,63 +190,16 @@ class _MyHomePageState extends State<MyHomePage> {
                   }),
             ],
           );
-    final transactionListWidget = Container(
-        height: (mediaQuery.size.height -
-                appBar.preferredSize.height -
-                mediaQuery.padding.top) *
-            0.7,
-        margin: EdgeInsets.symmetric(horizontal: 8.0),
-        child: TransactionList(deleteTransaction: _deleteTransaction));
-    final chartWidgetPortrait = Container(
-        height: (mediaQuery.size.height -
-                appBar.preferredSize.height -
-                mediaQuery.padding.top) *
-            0.3,
-        child: Chart(recentTransactions: recentTransactions));
-    final chartWidgetLandscape = Container(
-        height: (mediaQuery.size.height -
-                appBar.preferredSize.height -
-                mediaQuery.padding.top) *
-            0.7,
-        child: Chart(recentTransactions: recentTransactions));
-
     final pageBody = SafeArea(
       child: SingleChildScrollView(
         child: Column(
           children: [
-            if (isLandscape)
-              SwitchListTile.adaptive(
-                value: _showChart,
-                onChanged: (value) {
-                  setState(() {
-                    _showChart = value;
-                  });
-                },
-                title: Text(
-                  'Show Chart',
-                  style: Theme.of(context).textTheme.headline6,
-                ),
-                subtitle: Text('To view all the transactions this week'),
-                activeColor: kColorPrimary,
-              ),
-            isLandscape
-                ? _showChart
-                    ? chartWidgetLandscape
-                    : transactionListWidget
-                : SafeArea(
-                    child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        chartWidgetPortrait,
-                        transactionListWidget,
-                      ],
-                    ),
-                  ))
+            if (isLandscape) ..._buildLandscapeContent(mediaQuery, appBar),
+            if (!isLandscape) ..._buildPortraitContent(mediaQuery, appBar),
           ],
         ),
       ),
     );
-
     return Platform.isIOS
         ? CupertinoPageScaffold(
             child: pageBody,
